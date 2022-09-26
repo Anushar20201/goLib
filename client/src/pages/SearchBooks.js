@@ -1,9 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { Jumbotron, Container, Col, Form, Button, Card, CardColumns } from 'react-bootstrap';
+import React, { useState, useEffect } from "react";
 
-import Auth from '../utils/auth';
-import { saveBook, searchGoogleBooks } from '../utils/API';
-import { saveBookIds, getSavedBookIds } from '../utils/localStorage';
+import {
+  Jumbotron,
+  Container,
+  Col,
+  Form,
+  Button,
+  Card,
+  CardColumns,
+} from "react-bootstrap";
+import { useMutation } from "@apollo/client";
+import { SAVE_BOOK } from "../utils/mutations";
+import Auth from "../utils/auth";
+import { searchGoogleBooks } from "../utils/API";
+import { saveBookIds, getSavedBookIds } from "../utils/localStorage";
 
 const SearchBooks = () => {
   // create state for holding returned google api data
@@ -13,8 +23,8 @@ const SearchBooks = () => {
 
   // create state to hold saved bookId values
   const [savedBookIds, setSavedBookIds] = useState(getSavedBookIds());
+  const [saveBook, { error }] = useMutation(SAVE_BOOK);
 
-  // set up useEffect hook to save `savedBookIds` list to localStorage on component unmount
   // learn more here: https://reactjs.org/docs/hooks-effect.html#effects-with-cleanup
   useEffect(() => {
     return () => saveBookIds(savedBookIds);
@@ -116,20 +126,29 @@ const SearchBooks = () => {
             return (
               <Card key={book.bookId} border='dark'>
                 {book.image ? (
-                  <Card.Img src={book.image} alt={`The cover for ${book.title}`} variant='top' />
+                  <Card.Img
+                    src={book.image}
+                    alt={`The cover for ${book.title}`}
+                    variant="top"
+                  />
                 ) : null}
                 <Card.Body>
                   <Card.Title>{book.title}</Card.Title>
-                  <p className='small'>Authors: {book.authors}</p>
+                  <p className="small">Authors: {book.authors}</p>
                   <Card.Text>{book.description}</Card.Text>
                   {Auth.loggedIn() && (
                     <Button
-                      disabled={savedBookIds?.some((savedBookId) => savedBookId === book.bookId)}
-                      className='btn-block btn-info'
-                      onClick={() => handleSaveBook(book.bookId)}>
-                      {savedBookIds?.some((savedBookId) => savedBookId === book.bookId)
-                        ? 'This book has already been saved!'
-                        : 'Save this Book!'}
+                      disabled={savedBookIds?.some(
+                        (savedBookId) => savedBookId === book.bookId
+                      )}
+                      className="btn-block btn-info"
+                      onClick={() => handleSaveBook(book.bookId)}
+                    >
+                      {savedBookIds?.some(
+                        (savedBookId) => savedBookId === book.bookId
+                      )
+                        ? "This book has already been saved!"
+                        : "Save this Book!"}
                     </Button>
                   )}
                 </Card.Body>
