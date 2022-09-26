@@ -7,6 +7,7 @@ const {authMiddleware} = require('./utils/auth');
 const db = require('./config/connection');
 
 const PORT = process.env.PORT || 3001;
+//creating intance for ApolloServer
 const server = new ApolloServer({
   typeDefs,
   resolvers,
