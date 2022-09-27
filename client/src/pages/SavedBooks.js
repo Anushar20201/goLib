@@ -6,19 +6,18 @@ import {
   Card,
   Button,
 } from "react-bootstrap";
-import { useMutation, useQuery } from "@apollo/client";
-import { REMOVE_BOOK } from "../utils/mutations";
-import { GET_ME } from "../utils/queries";
+import { useQuery, useMutation } from "@apollo/react-hooks";
+
 import Auth from "../utils/auth";
 import { removeBookId } from "../utils/localStorage";
+import { GET_ME } from "../utils/queries";
+import { REMOVE_BOOK } from "../utils/mutations";
 
 const SavedBooks = () => {
-  //getting the data from GET_ME query
-  const { data, loading } = useQuery(GET_ME);
-  // assigning it to userData, empty if no user
-  const userData = data?.me || {};
+  const { loading, data } = useQuery(GET_ME);
+  const [removeBook] = useMutation(REMOVE_BOOK);
 
-  const [deleteBook] = useMutation(REMOVE_BOOK);
+  const userData = data?.me || [];
 
   // create function that accepts the book's mongo _id value as param and deletes the book from the database
   const handleDeleteBook = async (bookId) => {
@@ -29,13 +28,10 @@ const SavedBooks = () => {
     }
 
     try {
-      await deleteBook({
+      await removeBook({
         variables: { bookId },
       });
 
-      if (error) {
-        throw new Error("something went wrong!");
-      }
       removeBookId(bookId);
     } catch (err) {
       console.error(err);
@@ -56,16 +52,16 @@ const SavedBooks = () => {
       </Jumbotron>
       <Container>
         <h2>
-          {userData.savedBooks?.length
-            ? `Viewing ${userData.savedBooks?.length} saved ${
-                userData.savedBooks?.length === 1 ? "book" : "books"
+          {userData.savedBooks.length
+            ? `Viewing ${userData.savedBooks.length} saved ${
+                userData.savedBooks.length === 1 ? "book" : "books"
               }:`
             : "You have no saved books!"}
         </h2>
         <CardColumns>
-          {userData.savedBooks?.map((book) => {
+          {userData.savedBooks.map((book) => {
             return (
-              <Card key={book?.bookId} border="dark">
+              <Card key={book.bookId} border="dark">
                 {book.image ? (
                   <Card.Img
                     src={book.image}
@@ -76,6 +72,12 @@ const SavedBooks = () => {
                 <Card.Body>
                   <Card.Title>{book.title}</Card.Title>
                   <p className="small">Authors: {book.authors}</p>
+                  <p className="small">
+                    Link:{" "}
+                    <a href={book.link} target="_blank" rel="noreferrer">
+                      {book.title}
+                    </a>
+                  </p>
                   <Card.Text>{book.description}</Card.Text>
                   <Button
                     className="btn-block btn-danger"

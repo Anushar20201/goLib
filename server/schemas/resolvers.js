@@ -7,9 +7,9 @@ const resolvers = {
   Query: {
     me: async (parent, args, context) => {
       if (context.user) {
-        const userData = await User.findOne({ _id: context.user._id }).select(
-          "-__v -password"
-        );
+        const userData = await User.findOne({ _id: context.user._id })
+          .select("-__v -password")
+          .populate("books");
 
         return userData;
       }
@@ -22,10 +22,14 @@ const resolvers = {
   Mutation: {
         //when a new user is added/signed-in
     addUser: async (parent, args) => {
-      const user = await User.create(args);
-      const token = signToken(user);
+      try {
+        const user = await User.create(args);
 
-      return { token, user };
+        const token = signToken(user);
+        return { token, user };
+      } catch (err) {
+        console.log(err);
+      }
     },
         //when user logins with valid creds and displayimg same error for invalid creds
     login: async (parent, { email, password }) => {
@@ -44,30 +48,32 @@ const resolvers = {
       const token = signToken(user);
       return { token, user };
     },
-    saveBook: async (parent, { input }, context) => {
+    saveBook: async (parent, args, context) => {
       if (context.user) {
-        const updatedUser = await User.findOneAndUpdate(
+        const updatedUser = await User.findByIdAndUpdate(
           { _id: context.user._id },
-          { $push: { savedBooks: input } },
-          { new: true }
+          { $addToSet: { savedBooks: args.input } },
+          { new: true, runValidators: true }
         );
 
         return updatedUser;
       }
             throw new AuthenticationError('Pls log in!')
     },
-        //removing(pulling out) the book based on bookId and returning the left ones
-    removeBook: async (parent, { bookId }, context) => {
+            //removing(pulling out) the book based on bookId and returning the left ones
+
+    removeBook: async (parent, args, context) => {
       if (context.user) {
         const updatedUser = await User.findOneAndUpdate(
           { _id: context.user._id },
-          { $pull: { savedBooks: { bookId: bookId } } },
+          { $pull: { savedBooks: { bookId: args.bookId } } },
           { new: true }
         );
 
         return updatedUser;
       }
 
+      throw new AuthenticationError("Do log in!");
     },
   },
 };
